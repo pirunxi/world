@@ -5,18 +5,12 @@
 	"Description": "",
 	"Modules": [
 		{
-			"Name": "Game",
+			"Name": "World",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"Engine"
 			]
-		}
-	],
-	"Plugins": [
-		{
-			"Name": "MyPlugin",
-			"Enabled": true
 		}
 	]
 }

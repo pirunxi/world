@@ -3,12 +3,12 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-public class GameTarget : TargetRules
+public class WorldTarget : TargetRules
 {
-	public GameTarget(TargetInfo Target) : base(Target)
+	public WorldTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
 
-		ExtraModuleNames.AddRange( new string[] { "Game" } );
+		ExtraModuleNames.AddRange( new string[] { "World" } );
 	}
 }
