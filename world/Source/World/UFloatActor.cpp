@@ -2,7 +2,7 @@
 
 #include "UFloatActor.h"
 #include "lua.hpp"
-#include "UWGameInstance.h"
+#include "WorldGameInstance.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(WLog, Log, All);
 
@@ -19,7 +19,7 @@ void AUFloatActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UUWGameInstance* gs = Cast<UUWGameInstance>(GetGameInstance());
+	UWorldGameInstance* gs = Cast<UWorldGameInstance>(GetGameInstance());
 	if (gs != nullptr)
 	{
 		lua_State* L = gs->GetLuaState();
@@ -32,6 +32,7 @@ void AUFloatActor::BeginPlay()
 			UE_LOG(WLog, Warning, TEXT("lua script error:%s"), ANSI_TO_TCHAR(lua_tostring(L, -1)));
 		}
 	}
+	TotalTime = 0;
 }
 
 // Called every frame
@@ -39,6 +40,13 @@ void AUFloatActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	auto NewTotalTime = TotalTime + DeltaTime;
+	int R = 20;
+	auto Position = GetActorLocation();
+	Position.X += R * (FMath::Cos(NewTotalTime) - FMath::Cos(TotalTime));
+	Position.Y += R * (FMath::Sin(NewTotalTime) - FMath::Sin(TotalTime));
 
+	SetActorLocation(Position);
+	TotalTime = NewTotalTime;
 }
 

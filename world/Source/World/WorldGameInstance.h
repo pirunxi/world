@@ -6,14 +6,14 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
-#include "UWGameInstance.generated.h"
+#include "WorldGameInstance.generated.h"
 
 
 /**
  * 
  */
 UCLASS()
-class WORLD_API UUWGameInstance : public UGameInstance
+class WORLD_API UWorldGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 

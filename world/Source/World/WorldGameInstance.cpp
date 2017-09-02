@@ -1,15 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "UWGameInstance.h"
+#include "WorldGameInstance.h"
 #include "Ticker.h"
+
+#include "Net/NetWork.h"
+#include "Net/Session.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(WLog, Log, All);
 
-void UUWGameInstance::Init()
+
+void UWorldGameInstance::Init()
 {
 	Super::Init();
 	UE_LOG(WLog, Warning, TEXT("GameInstance Init"));
-	TickDelegatehandle = FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UUWGameInstance::Tick));
+	TickDelegatehandle = FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UWorldGameInstance::Tick));
 
 	luaState = luaL_newstate();
 	if (luaState == nullptr)
@@ -21,9 +25,11 @@ void UUWGameInstance::Init()
 		UE_LOG(WLog, Log, TEXT("NEW lua state succ"));
 		luaL_openlibs(luaState);
 	}
+
+	NetWork::GetInstance().Start();
 }
 
-void UUWGameInstance::Shutdown()
+void UWorldGameInstance::Shutdown()
 {
 	Super::Shutdown();
 	UE_LOG(WLog, Warning, TEXT("GameInstance Shutdown"));
@@ -34,11 +40,15 @@ void UUWGameInstance::Shutdown()
 		luaState = nullptr;
 		UE_LOG(WLog, Log, TEXT("Destory luaState succ"));
 	}
+
+	NetWork::GetInstance().Shutdown();
 }
 
 
-bool UUWGameInstance::Tick(float DeltaSeconds)
+
+bool UWorldGameInstance::Tick(float DeltaSeconds)
 {
 	//UE_LOG(WLog, Log, TEXT("GameInstance Tick"));
+	NetWork::GetInstance().Tick();
 	return true;
 }
