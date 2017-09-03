@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Sockets.h"
-#include "IPv4Address.h"
 
 #include "BinaryStream.h"
+#include "Sockets.h"
+#include "Networking.h"
+
 /**
  * 
  */
@@ -23,10 +24,7 @@ class WORLD_API Session
 {
 protected:
 	int Id;
-	FString Host;
-
-	FIPv4Address Ipv4Addr;
-
+	const char* Host;
 	int Port;
 	FSocket* Socket;
 
@@ -39,7 +37,7 @@ protected:
 	BinaryStream OutputBuffer;
 
 public:
-	Session(FString Host, int Port);
+	Session(const char* Host, int Port);
 
 	virtual ~Session();
 
@@ -48,7 +46,7 @@ public:
 		return Id;
 	}
 
-	FString GetHost()
+	const char* GetHost()
 	{
 		return Host;
 	}

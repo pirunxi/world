@@ -36,3 +36,5 @@ private:
 
 	lua_State* luaState;
 };
+
+DECLARE_LOG_CATEGORY_EXTERN(WLog, Log, All);

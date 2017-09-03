@@ -1,13 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
+
 #include "WorldGameInstance.h"
-#include "Ticker.h"
 
 #include "Net/NetWork.h"
-#include "Net/Session.h"
-
-DECLARE_LOG_CATEGORY_EXTERN(WLog, Log, All);
-
+#include "Ticker.h"
 
 void UWorldGameInstance::Init()
 {

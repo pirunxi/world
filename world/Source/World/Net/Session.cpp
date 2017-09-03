@@ -1,14 +1,61 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Session.h"
-#include "Common/TcpSocketBuilder.h"
 #include "NetWork.h"
+#include <string>
 
 DEFINE_LOG_CATEGORY(NetLog);
 
-Session::Session(FString host, int port) : Id(AllocNextId()), Host(host), Port(port), SocketRecvSize(1024 * 128), SocketSendSize(1024 * 32),
+Session::Session(const char* host, int port) : Id(AllocNextId()), Host(host), Port(port), SocketRecvSize(1024 * 128), SocketSendSize(1024 * 32),
 	Socket(nullptr), State(SessionState::BEFORE_CONNECT)
 {
+}
+
+FSocket* Session::CreateSocket()
+{
+	FSocket* socket = nullptr;
+
+	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+
+	if (SocketSubsystem != nullptr)
+	{
+		socket = SocketSubsystem->CreateSocket(NAME_Stream, TEXT("socket"), true);
+
+		if (socket != nullptr)
+		{
+			bool Error = !socket->SetReuseAddr(true) ||
+			//	!Socket->SetLinger(Linger, LingerTimeout) ||
+				!socket->SetRecvErr();
+
+			if (!Error)
+			{
+				Error = !socket->SetNonBlocking();
+			}
+
+			if (!Error)
+			{
+				int32 OutNewSize;
+
+				if (SocketRecvSize > 0)
+				{
+					socket->SetReceiveBufferSize(SocketRecvSize, OutNewSize);
+				}
+
+				if (SocketSendSize > 0)
+				{
+					socket->SetSendBufferSize(SocketSendSize, OutNewSize);
+				}
+			}
+
+			if (Error)
+			{
+				SocketSubsystem->DestroySocket(socket);
+				socket = nullptr;
+			}
+		}
+	}
+
+	return socket;
 }
 
 bool Session::Connect()
@@ -19,47 +66,49 @@ bool Session::Connect()
 		return false;
 	}
 
+	State = CONNECTING;
+
 	NetWork::GetInstance().AddSession(this);
-	if (!FIPv4Address::Parse(Host, Ipv4Addr))
+
+	ISocketSubsystem* SocketSubSystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+	TSharedRef<FInternetAddr> Addr = SocketSubSystem->CreateInternetAddr(0, 0);
+	FIPv4Address ipAddr;
+	if (!FIPv4Address::Parse(ANSI_TO_TCHAR(Host), ipAddr))
 	{
-		auto SubSystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
-		auto addr = SubSystem->CreateInternetAddr(0, 0);
-		auto err = SubSystem->GetHostByName(TCHAR_TO_ANSI(*Host), *addr);
-		if (err != 0)
+		ESocketErrors SocketError = SocketSubSystem->GetHostByName(Host, *Addr);
+		if (SocketError != 0)
 		{
-			UE_LOG(NetLog, Error, TEXT("Unknown Host:%s err:%d"), *Host, int(err));
+			UE_LOG(NetLog, Error, TEXT("Unknown host:%s"), ANSI_TO_TCHAR(Host));
+			Close();
 			return false;
 		}
-
-		uint32 ip;
-		addr->GetIp(ip);
-		Ipv4Addr = FIPv4Address(ip);
-		UE_LOG(NetLog, Log, TEXT("Resolve Host:%s IP:%s"), *Host, *Ipv4Addr.ToString());
 	}
-	
+	else
+	{
+		Addr->SetIp(ipAddr.Value);
+	}
+	Addr->SetPort(Port);
+
 	Socket = CreateSocket();
 	if (Socket == nullptr)
 	{
-		UE_LOG(NetLog, Error, TEXT("Create Socket fail"));
+		UE_LOG(NetLog, Error, TEXT("create socket fail"));
 		Close();
 		return false;
 	}
 
-	UE_LOG(NetLog, Log, TEXT("Connect Host:%s Ip:%s Port:%d"), *Host, *Ipv4Addr.ToString(), Port);
-	if (!Socket->Connect(*FIPv4Endpoint(Ipv4Addr, Port).ToInternetAddr()))
+	if (!Socket->Connect(*Addr))
 	{
-		UE_LOG(NetLog, Error, TEXT("Socket Connect fail"));
+		UE_LOG(NetLog, Error, TEXT("connect socket fail"));
 		Close();
 		return false;
 	}
-
-	State = CONNECTING;
 	return true;
 }
 
 void Session::Close()
 {
-	if (State >= CLOSED)
+	if (State == CLOSED)
 	{
 		UE_LOG(NetLog, Error, TEXT("try close not connect or closed session!"));
 		return;
@@ -70,12 +119,12 @@ void Session::Close()
 		ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
 		Socket = nullptr;
 	}
+	//socket_destroy(&Socket);
 	OnClose(1);
 }
 
 void Session::Tick()
 {
-	Socket->GetConnectionState();
 	switch (Socket->GetConnectionState())
 	{
 		case ESocketConnectionState::SCS_Connected:
@@ -85,11 +134,38 @@ void Session::Tick()
 				State = CONNECTED;
 				OnConnect();
 			}
-			uint32 size;
-			if (Socket->HasPendingData(size))
 			{
-				//Socket->Recv();
+				int ReadBuffSize = 1024 * 10;
+
+				int ReadSize;
+				if (!Socket->Recv((uint8*)InputBuffer.Reserve(ReadBuffSize), ReadBuffSize, ReadSize))
+				{
+					Close();
+					return;
+				}
+				if (ReadSize > 0)
+				{
+					UE_LOG(NetLog, Log, TEXT("recv byets:%d"), ReadSize);
+					InputBuffer.AppendWithoutCopy(ReadSize);
+				}
 			}
+			{
+				if (!OutputBuffer.empty())
+				{
+					int32 WriteSize;
+					if (!Socket->Send((const uint8*)OutputBuffer.GetDataHead(), OutputBuffer.size(), WriteSize))
+					{
+						Close();
+						return;
+					}
+					if (WriteSize > 0)
+					{
+						UE_LOG(NetLog, Log, TEXT("send byets:%d"), WriteSize);
+						//OutputBuffer.Skip(WriteSize);
+					}
+				}
+			}
+
 			break;
 		}
 		case ESocketConnectionState::SCS_ConnectionError:
@@ -112,46 +188,4 @@ void Session::OnClose(int err)
 
 Session::~Session()
 {
-}
-
-FSocket * Session::CreateSocket()
-{
-	FSocket* socket = nullptr;
-
-	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
-
-	if (SocketSubsystem != nullptr)
-	{
-		socket = SocketSubsystem->CreateSocket(NAME_Stream, TEXT("Session"), false);
-		if (socket != nullptr)
-		{
-			bool Error = !socket->SetReuseAddr(true) ||
-				//!Socket->SetLinger(Linger, LingerTimeout) ||
-				!socket->SetRecvErr();
-
-			//if (!Error)
-			//{
-			//	Error = !socket->Bind(*FIPv4Endpoint(Ipv4Addr, Port).ToInternetAddr());
-			//}
-
-			if (!Error)
-			{
-				Error = !socket->SetNonBlocking(true);
-			}
-
-			if (!Error)
-			{
-				int32 OutNewSize;
-				socket->SetReceiveBufferSize(SocketRecvSize, OutNewSize);
-				socket->SetSendBufferSize(SocketSendSize, OutNewSize);
-			}
-
-			if (Error)
-			{
-				SocketSubsystem->DestroySocket(socket);
-				socket = nullptr;
-			}
-		}
-	}
-	return socket;
 }

@@ -4,7 +4,6 @@
 #include "lua.hpp"
 #include "WorldGameInstance.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(WLog, Log, All);
 
 // Sets default values
 AUFloatActor::AUFloatActor()
