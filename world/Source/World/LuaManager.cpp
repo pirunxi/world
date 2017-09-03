@@ -22,6 +22,8 @@ LuaManager::~LuaManager()
 void LuaManager::Start()
 {
 	UE_LOG(WLog, Log, TEXT("LuaManager::Start"));
+
+
 	_L = luaL_newstate();
 	luaL_openlibs(_L);
 
@@ -31,9 +33,29 @@ void LuaManager::Start()
 	FString LuaPath = FPaths::Combine(FPaths::GameContentDir(), TEXT("Lua"), TEXT("?.lua"));
 	AddSearchPath(TCHAR_TO_UTF8(*LuaPath));
 
-	if (luaL_dostring(_L, "require 'main'"))
+	if (luaL_dostring(_L, "return require('main')"))
 	{
 		UE_LOG(WLog, Log, TEXT("load main fail. err:%s"), UTF8_TO_TCHAR(lua_tostring(_L, -1)));
+	}
+	else
+	{
+		UE_LOG(WLog, Log, TEXT("load main.lua succ"));
+		if (lua_istable(_L, -1))
+		{
+			lua_getfield(_L, -1, "Init");
+			if (lua_pcall(_L, 0, 0, 0))
+			{
+				UE_LOG(WLog, Error, TEXT("main.Init fail. err:%s"), UTF8_TO_TCHAR(lua_tostring(_L, -1)));
+			}
+			else
+			{
+				UE_LOG(WLog, Log, TEXT("main.Init succ"));
+			}
+		}
+		else
+		{
+			UE_LOG(WLog, Error, TEXT("main.lua should return table"));
+		}
 	}
 	lua_settop(_L, 0);
 }
