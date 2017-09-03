@@ -161,7 +161,7 @@ void Session::Tick()
 					if (WriteSize > 0)
 					{
 						UE_LOG(NetLog, Log, TEXT("send byets:%d"), WriteSize);
-						//OutputBuffer.Skip(WriteSize);
+						OutputBuffer.Skip(WriteSize);
 					}
 				}
 			}

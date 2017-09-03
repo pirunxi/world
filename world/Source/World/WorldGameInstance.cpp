@@ -3,9 +3,10 @@
 
 
 #include "WorldGameInstance.h"
+#include "Ticker.h"
 
 #include "Net/NetWork.h"
-#include "Ticker.h"
+#include "LuaManager.h"
 
 void UWorldGameInstance::Init()
 {
@@ -13,18 +14,9 @@ void UWorldGameInstance::Init()
 	UE_LOG(WLog, Warning, TEXT("GameInstance Init"));
 	TickDelegatehandle = FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UWorldGameInstance::Tick));
 
-	luaState = luaL_newstate();
-	if (luaState == nullptr)
-	{
-		UE_LOG(WLog, Error, TEXT("NEW lua state fail"));
-	}
-	else
-	{
-		UE_LOG(WLog, Log, TEXT("NEW lua state succ"));
-		luaL_openlibs(luaState);
-	}
 
 	NetWork::GetInstance().Start();
+	LuaManager::GetInstance().Start();
 }
 
 void UWorldGameInstance::Shutdown()
@@ -40,6 +32,7 @@ void UWorldGameInstance::Shutdown()
 	}
 
 	NetWork::GetInstance().Shutdown();
+	LuaManager::GetInstance().Shutdown();
 }
 
 
@@ -48,5 +41,6 @@ bool UWorldGameInstance::Tick(float DeltaSeconds)
 {
 	//UE_LOG(WLog, Log, TEXT("GameInstance Tick"));
 	NetWork::GetInstance().Tick();
+	LuaManager::GetInstance().Tick(DeltaSeconds);
 	return true;
 }
