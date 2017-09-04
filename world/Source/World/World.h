@@ -16,5 +16,3 @@ public:
 
 	virtual void ShutdownModule() override;
 };
-
-DECLARE_LOG_CATEGORY_EXTERN(WLog, Log, All);

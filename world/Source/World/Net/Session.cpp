@@ -4,7 +4,7 @@
 #include "NetWork.h"
 #include <string>
 
-DEFINE_LOG_CATEGORY(NetLog);
+#include "Logger.h"
 
 Session::Session(const char* host, int port) : Id(AllocNextId()), Host(host), Port(port), SocketRecvSize(1024 * 128), SocketSendSize(1024 * 32),
 	Socket(nullptr), State(SessionState::BEFORE_CONNECT)
@@ -62,7 +62,7 @@ bool Session::Connect()
 {
 	if (State != BEFORE_CONNECT)
 	{
-		UE_LOG(NetLog, Error, TEXT("try connect session twice!"));
+		Logger(Error, TEXT("try connect session twice!"));
 		return false;
 	}
 
@@ -78,7 +78,7 @@ bool Session::Connect()
 		ESocketErrors SocketError = SocketSubSystem->GetHostByName(Host, *Addr);
 		if (SocketError != 0)
 		{
-			UE_LOG(NetLog, Error, TEXT("Unknown host:%s"), ANSI_TO_TCHAR(Host));
+			Logger(Error, TEXT("Unknown host:%s"), ANSI_TO_TCHAR(Host));
 			Close();
 			return false;
 		}
@@ -92,14 +92,14 @@ bool Session::Connect()
 	Socket = CreateSocket();
 	if (Socket == nullptr)
 	{
-		UE_LOG(NetLog, Error, TEXT("create socket fail"));
+		Logger(Error, TEXT("create socket fail"));
 		Close();
 		return false;
 	}
 
 	if (!Socket->Connect(*Addr))
 	{
-		UE_LOG(NetLog, Error, TEXT("connect socket fail"));
+		Logger(Error, TEXT("connect socket fail"));
 		Close();
 		return false;
 	}
@@ -110,7 +110,7 @@ void Session::Close()
 {
 	if (State == CLOSED)
 	{
-		UE_LOG(NetLog, Error, TEXT("try close not connect or closed session!"));
+		Logger(Error, TEXT("try close not connect or closed session!"));
 		return;
 	}
 	State = CLOSED;
@@ -145,7 +145,7 @@ void Session::Tick()
 				}
 				if (ReadSize > 0)
 				{
-					UE_LOG(NetLog, Log, TEXT("recv byets:%d"), ReadSize);
+					Logger(Log, TEXT("recv byets:%d"), ReadSize);
 					InputBuffer.AppendWithoutCopy(ReadSize);
 				}
 			}
@@ -160,7 +160,7 @@ void Session::Tick()
 					}
 					if (WriteSize > 0)
 					{
-						UE_LOG(NetLog, Log, TEXT("send byets:%d"), WriteSize);
+						Logger(Log, TEXT("send byets:%d"), WriteSize);
 						OutputBuffer.Skip(WriteSize);
 					}
 				}
@@ -178,12 +178,12 @@ void Session::Tick()
 
 void Session::OnConnect()
 {
-	UE_LOG(NetLog, Log, TEXT("Session:%d Connect succ"), Id);
+	Logger(Log, TEXT("Session:%d Connect succ"), Id);
 }
 
 void Session::OnClose(int err)
 {
-	UE_LOG(NetLog, Log, TEXT("Session:%d Close"), Id);
+	Logger(Log, TEXT("Session:%d Close"), Id);
 }
 
 Session::~Session()

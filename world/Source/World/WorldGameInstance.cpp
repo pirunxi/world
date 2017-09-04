@@ -7,11 +7,12 @@
 
 #include "Net/NetWork.h"
 #include "LuaManager.h"
+#include "Logger.h"
 
 void UWorldGameInstance::Init()
 {
 	Super::Init();
-	UE_LOG(WLog, Warning, TEXT("GameInstance Init"));
+	Logger(Warning, TEXT("GameInstance Init"));
 	TickDelegatehandle = FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UWorldGameInstance::Tick));
 
 
@@ -22,13 +23,13 @@ void UWorldGameInstance::Init()
 void UWorldGameInstance::Shutdown()
 {
 	Super::Shutdown();
-	UE_LOG(WLog, Warning, TEXT("GameInstance Shutdown"));
+	Logger(Warning, TEXT("GameInstance Shutdown"));
 	FTicker::GetCoreTicker().RemoveTicker(TickDelegatehandle);
 	if (luaState != nullptr)
 	{
 		lua_close(luaState);
 		luaState = nullptr;
-		UE_LOG(WLog, Log, TEXT("Destory luaState succ"));
+		Logger(Log, TEXT("Destory luaState succ"));
 	}
 
 	NetWork::GetInstance().Shutdown();
@@ -39,7 +40,7 @@ void UWorldGameInstance::Shutdown()
 
 bool UWorldGameInstance::Tick(float DeltaSeconds)
 {
-	//UE_LOG(WLog, Log, TEXT("GameInstance Tick"));
+	//Logger(Log, TEXT("GameInstance Tick"));
 	NetWork::GetInstance().Tick();
 	LuaManager::GetInstance().Tick(DeltaSeconds);
 	return true;

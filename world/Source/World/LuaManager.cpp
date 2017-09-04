@@ -5,8 +5,7 @@
 #include "Paths.h"
 #include <string>
 
-
-DECLARE_LOG_CATEGORY_EXTERN(WLog, Log, All);
+#include "Logger.h"
 
 
 LuaManager LuaManager::Instance;
@@ -21,13 +20,13 @@ LuaManager::~LuaManager()
 
 void LuaManager::Start()
 {
-	UE_LOG(WLog, Log, TEXT("LuaManager::Start"));
+	Logger(Log, TEXT("LuaManager::Start"));
 
 
 	_L = luaL_newstate();
 	luaL_openlibs(_L);
 
-	UE_LOG(WLog, Log, TEXT("GameDir:%s GameConfigDir:%s GameContenDir:%s GameSaveDir:%s GameUserDir:%s name:%s"),
+	Logger(Log, TEXT("GameDir:%s GameConfigDir:%s GameContenDir:%s GameSaveDir:%s GameUserDir:%s name:%s"),
 		*FPaths::GameDir(), *FPaths::GameConfigDir(), *FPaths::GameContentDir(), *FPaths::GameSavedDir(), *FPaths::GameUserDir(), UTF8_TO_TCHAR("asdfa黄强"));
 
 	FString LuaPath = FPaths::Combine(FPaths::GameContentDir(), TEXT("Lua"), TEXT("?.lua"));
@@ -35,26 +34,26 @@ void LuaManager::Start()
 
 	if (luaL_dostring(_L, "return require('main')"))
 	{
-		UE_LOG(WLog, Log, TEXT("load main fail. err:%s"), UTF8_TO_TCHAR(lua_tostring(_L, -1)));
+		Logger(Log, TEXT("load main fail. err:%s"), UTF8_TO_TCHAR(lua_tostring(_L, -1)));
 	}
 	else
 	{
-		UE_LOG(WLog, Log, TEXT("load main.lua succ"));
+		Logger(Log, TEXT("load main.lua succ"));
 		if (lua_istable(_L, -1))
 		{
 			lua_getfield(_L, -1, "Init");
 			if (lua_pcall(_L, 0, 0, 0))
 			{
-				UE_LOG(WLog, Error, TEXT("main.Init fail. err:%s"), UTF8_TO_TCHAR(lua_tostring(_L, -1)));
+				Logger(Error, TEXT("main.Init fail. err:%s"), UTF8_TO_TCHAR(lua_tostring(_L, -1)));
 			}
 			else
 			{
-				UE_LOG(WLog, Log, TEXT("main.Init succ"));
+				Logger(Log, TEXT("main.Init succ"));
 			}
 		}
 		else
 		{
-			UE_LOG(WLog, Error, TEXT("main.lua should return table"));
+			Logger(Error, TEXT("main.lua should return table"));
 		}
 	}
 	lua_settop(_L, 0);
@@ -71,14 +70,14 @@ void LuaManager::AddSearchPath(const char* SearchPath)
 	lua_setfield(_L, -2, "path");
 	
 	lua_getfield(_L, -1, "path");
-	UE_LOG(WLog, Log, TEXT("LuaManager::AddSearchpath old:%s add:%s new:%s new2:%s"), UTF8_TO_TCHAR(oldPath), UTF8_TO_TCHAR(SearchPath),
+	Logger(Log, TEXT("LuaManager::AddSearchpath old:%s add:%s new:%s new2:%s"), UTF8_TO_TCHAR(oldPath), UTF8_TO_TCHAR(SearchPath),
 		UTF8_TO_TCHAR(newPath.c_str()), UTF8_TO_TCHAR(lua_tostring(_L, -1)));
 	lua_pop(_L, 2);
 }
 
 void LuaManager::Shutdown()
 {
-	UE_LOG(WLog, Log, TEXT("LuaManager::Shutdown"));
+	Logger(Log, TEXT("LuaManager::Shutdown"));
 	if (_L)
 	{
 		lua_close(_L);

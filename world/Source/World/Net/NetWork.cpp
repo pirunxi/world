@@ -3,6 +3,8 @@
 #include "NetWork.h"
 #include <algorithm>
 
+#include "Logger.h"
+
 NetWork NetWork::Instance;
 
 NetWork::NetWork()
@@ -17,7 +19,7 @@ NetWork & NetWork::GetInstance()
 void NetWork::AddSession(Session * session)
 {
 	ActiveSessiones.push_back(session);
-	UE_LOG(NetLog, Log, TEXT("NetWork.AddSession session:%d host:%s port:%d"),
+	Logger(Log, TEXT("NetWork.AddSession session:%d host:%s port:%d"),
 		session->GetId(), ANSI_TO_TCHAR(session->GetHost()), session->GetPort());
 }
 
@@ -33,7 +35,7 @@ void NetWork::Tick()
 		else
 		{
 			SomeToRemove = true;
-			UE_LOG(NetLog, Log, TEXT("NetWork.Tick remove session:%d"), ss->GetId());
+			Logger(Log, TEXT("NetWork.Tick remove session:%d"), ss->GetId());
 		}
 	}
 	if (SomeToRemove)

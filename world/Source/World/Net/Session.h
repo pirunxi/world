@@ -86,6 +86,3 @@ private:
 
 	FSocket* CreateSocket();
 };
-
-
-DECLARE_LOG_CATEGORY_EXTERN(NetLog, Log, All)

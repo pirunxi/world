@@ -11,11 +11,6 @@
 /**
  * 
  */
-
-
-
-
-
 class WORLD_API NetWork
 {
 public:
