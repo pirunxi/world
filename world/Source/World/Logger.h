@@ -7,3 +7,5 @@
 DECLARE_LOG_CATEGORY_EXTERN(WLog, Log, All);
 
 #define Logger(Verbosity, Format, ...) UE_LOG(WLog, Verbosity, Format, ##__VA_ARGS__)
+
+// GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Red, TEXT("°¢ÃÃÄã¿´£¬ÉÏµÛÑ¹¹·! "));

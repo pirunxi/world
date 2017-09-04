@@ -6,6 +6,7 @@
 #include <string>
 
 #include "Logger.h"
+//#include "Engine.h"
 
 
 LuaManager LuaManager::Instance;
@@ -57,6 +58,8 @@ void LuaManager::Start()
 		}
 	}
 	lua_settop(_L, 0);
+
+	GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Red, TEXT("阿妹你看，上帝压狗! "));
 }
 
 void LuaManager::AddSearchPath(const char* SearchPath)
