@@ -37,3 +37,5 @@
 /world/.vs
 /world/Binaries
 /world/Content/Lua/.idea
+world/Content/Scenes/UIMaker_BuiltData.uasset
+world/Content/Scenes/UIMaker.umap
