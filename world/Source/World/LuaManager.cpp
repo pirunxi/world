@@ -6,8 +6,10 @@
 #include <string>
 
 #include "Logger.h"
+#include "UserData/AllUserDatas.h"
 //#include "Engine.h"
 
+#include <iostream>
 
 LuaManager LuaManager::Instance;
 
@@ -27,12 +29,18 @@ void LuaManager::Start()
 	_L = luaL_newstate();
 	luaL_openlibs(_L);
 
-	Logger(Log, TEXT("GameDir:%s GameConfigDir:%s GameContenDir:%s GameSaveDir:%s GameUserDir:%s name:%s"),
-		*FPaths::GameDir(), *FPaths::GameConfigDir(), *FPaths::GameContentDir(), *FPaths::GameSavedDir(), *FPaths::GameUserDir(), UTF8_TO_TCHAR("asdfa黄强"));
-
 	FString LuaPath = FPaths::Combine(FPaths::GameContentDir(), TEXT("Lua"), TEXT("?.lua"));
 	AddSearchPath(TCHAR_TO_UTF8(*LuaPath));
 
+	RegisterCppClasses();
+	InitLuaMain();
+
+
+	//GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Red, TEXT("阿妹你看，上帝压狗! "));
+}
+
+void LuaManager::InitLuaMain()
+{
 	if (luaL_dostring(_L, "return require('main')"))
 	{
 		Logger(Log, TEXT("load main fail. err:%s"), UTF8_TO_TCHAR(lua_tostring(_L, -1)));
@@ -58,8 +66,6 @@ void LuaManager::Start()
 		}
 	}
 	lua_settop(_L, 0);
-
-	GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Red, TEXT("阿妹你看，上帝压狗! "));
 }
 
 void LuaManager::AddSearchPath(const char* SearchPath)
@@ -90,5 +96,28 @@ void LuaManager::Shutdown()
 
 void LuaManager::Tick(float DeltaSeconds)
 {
+}
+
+
+
+void LuaManager::RegisterCppClasses()
+{
+	sol::state_view lua(_L);
+	lua["print"] = [](const sol::variadic_args& args)
+	{
+		std::stringstream ss;
+		if (args.size() > 0)
+		{
+			ss << args[0].as<std::string>();
+			for (auto it = ++args.begin(); it != args.end(); ++it)
+			{
+				ss << "\t" << it->as<std::string>();
+			}
+		}
+		std::string text = ss.str();
+		Logger(Log, TEXT("%s"), UTF8_TO_TCHAR(text.c_str()));
+	};
+
+	UserData::RegisterAll();
 }
 

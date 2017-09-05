@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 
-#include "lua.hpp"
+#include "sol.hpp"
 /**
  * 
  */
@@ -22,6 +22,9 @@ public:
 private:
 	LuaManager();
 	~LuaManager();
+
+	void RegisterCppClasses();
+	void InitLuaMain();
 
 	lua_State* _L;
 

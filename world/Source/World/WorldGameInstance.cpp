@@ -13,6 +13,10 @@ void UWorldGameInstance::Init()
 {
 	Super::Init();
 	Logger(Warning, TEXT("GameInstance Init"));
+
+	Logger(Log, TEXT("GameDir:%s GameConfigDir:%s GameContenDir:%s GameSaveDir:%s GameUserDir:%s name:%s"),
+		*FPaths::GameDir(), *FPaths::GameConfigDir(), *FPaths::GameContentDir(), *FPaths::GameSavedDir(), *FPaths::GameUserDir(), UTF8_TO_TCHAR("asdfa»ÆÇ¿"));
+
 	TickDelegatehandle = FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &UWorldGameInstance::Tick));
 
 
