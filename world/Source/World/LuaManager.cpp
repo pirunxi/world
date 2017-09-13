@@ -84,6 +84,45 @@ void LuaManager::AddSearchPath(const char* SearchPath)
 	lua_pop(_L, 2);
 }
 
+class LuaSession : public Session
+{
+
+private:
+	std::function<void()> _onConnectFun;
+	std::function<void(int)> _onCloseFun;
+	std::function<void(int, BinaryStream&)>& _onRecvFun;
+
+public:
+
+	LuaSession(const char* host, int port, std::function<void()> onConnectFun, std::function<void(int)> onCloseFun, std::function<void(int, BinaryStream&)>& onRecvFun)
+		: Session(host, port), _onConnectFun(onConnectFun), _onCloseFun(onCloseFun), _onRecvFun(onRecvFun)
+	{
+
+	}
+
+	void OnConnect()
+	{
+		Session::OnConnect();
+		_onConnectFun();
+	}
+
+	void OnClose(int err)
+	{
+		Session::OnClose(err);
+		_onCloseFun(err);
+	}
+
+	void OnRecv(int type, BinaryStream& MsgBody)
+	{
+		_onRecvFun(type, MsgBody);
+	}
+};
+
+Session* LuaManager::CreateSession(const char * host, int port, std::function<void()> onConnectFun, std::function<void(int)> onCloseFun, std::function<void(int, BinaryStream&)> onRecvFun)
+{
+	return new LuaSession(host, port, onConnectFun, onCloseFun, onRecvFun);
+}
+
 void LuaManager::Shutdown()
 {
 	Logger(Log, TEXT("LuaManager::Shutdown"));
@@ -96,6 +135,7 @@ void LuaManager::Shutdown()
 
 void LuaManager::Tick(float DeltaSeconds)
 {
+
 }
 
 
@@ -103,21 +143,6 @@ void LuaManager::Tick(float DeltaSeconds)
 void LuaManager::RegisterCppClasses()
 {
 	sol::state_view lua(_L);
-	lua["print"] = [](const sol::variadic_args& args)
-	{
-		std::stringstream ss;
-		if (args.size() > 0)
-		{
-			ss << args[0].as<std::string>();
-			for (auto it = ++args.begin(); it != args.end(); ++it)
-			{
-				ss << "\t" << it->as<std::string>();
-			}
-		}
-		std::string text = ss.str();
-		Logger(Log, TEXT("%s"), UTF8_TO_TCHAR(text.c_str()));
-	};
-
-	UserData::RegisterAll();
+	UserData::RegisterAll(lua);
 }
 

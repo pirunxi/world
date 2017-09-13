@@ -17,7 +17,6 @@ public:
 	static NetWork& GetInstance();
 
 	void AddSession(Session* session);
-	void RemoveSession(Session* session);
 
 	void Tick();
 	virtual ~NetWork();

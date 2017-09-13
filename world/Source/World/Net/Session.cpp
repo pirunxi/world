@@ -176,6 +176,10 @@ void Session::Tick()
 	}
 }
 
+void Session::Send(BinaryStream & bs)
+{
+}
+
 void Session::OnConnect()
 {
 	Logger(Log, TEXT("Session:%d Connect succ"), Id);

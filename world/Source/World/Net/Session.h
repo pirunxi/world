@@ -69,11 +69,11 @@ public:
 	virtual bool Connect() final;
 	virtual void Close() final;
 	virtual void Tick() final;
+	void Send(BinaryStream& bs);
 
 	virtual void OnConnect();
 	virtual void OnClose(int err);
 	virtual void OnRecv(int type, BinaryStream& MsgBody) = 0;
-	virtual void Send(BinaryStream& bs) = 0;
 
 protected:
 

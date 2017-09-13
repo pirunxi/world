@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 
 #include "sol.hpp"
+#include "Net/BinaryStream.h"
+#include "Net/Session.h"
+
 /**
  * 
  */
@@ -19,9 +22,11 @@ public:
 	void Tick(float DeltaSeconds);
 
 	void AddSearchPath(const char* SearchPath);
-private:
+
+	Session* CreateSession(const char* host, int port, std::function<void()> onConnectFun, std::function<void(int)> onCloseFun, std::function<void(int, BinaryStream&)> onRecvFun);
 	LuaManager();
 	~LuaManager();
+private:
 
 	void RegisterCppClasses();
 	void InitLuaMain();

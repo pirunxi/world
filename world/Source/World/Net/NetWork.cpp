@@ -61,43 +61,12 @@ NetWork::~NetWork()
 {
 }
 
-class TestSession : public Session
-{
-public:
-	using Session::Session;
-
-	void OnRecv(int type, BinaryStream& MsgBody) override
-	{
-
-	}
-
-	void Send(BinaryStream& bs) override
-	{
-
-	}
-
-	void OnClose(int err)
-	{
-		Session::OnClose(err);
-	}
-
-
-	void OnConnect() override
-	{
-		Session::OnConnect();
-		// CBindServer
-		OutputBuffer.WriteInt(2);
-		OutputBuffer.WriteInt(1);
-		OutputBuffer.WriteInt(12);
-	}
-};
-
 void NetWork::Start()
 {
 
 	//auto ss = new TestSession(TEXT("dev-proxy.oa.com"), 8080);
-	auto ss = new TestSession("127.0.0.1", 1218);
-	ss->Connect();
+	//auto ss = new LuaSession("127.0.0.1", 1218);
+	//ss->Connect();
 }
 
 void NetWork::Shutdown()
